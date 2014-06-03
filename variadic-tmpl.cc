@@ -10,6 +10,8 @@ class Test<T, Args...> {
 public:
   T t;
   Test<Args...> rest;
+  // sizeof... instead of sizeof(Args...) seems inconsistent
+  static const int count = sizeof...(Args);
 };
 
 template<>
@@ -20,7 +22,14 @@ int
 main(int argc, char* argv[])
 {
   Test<int, float, char> test;
-  std::cout << sizeof(test.t) << std::endl;
-  std::cout << sizeof(test.rest.t) << std::endl;
-  std::cout << sizeof(test.rest.rest.t) << std::endl;
+  std::cout
+    << sizeof(test.t) << " "
+    << test.count << " "
+    << std::endl
+    << sizeof(test.rest.t) << " "
+    << test.rest.count << " "
+    << std::endl
+    << sizeof(test.rest.rest.t) << " "
+    << test.rest.rest.count << " "
+    << std::endl;
 }
