@@ -1,7 +1,6 @@
 #include <iostream>
 
 // Test of variadic templates.
-
 template<typename... Args>
 class Test;
 
@@ -10,6 +9,9 @@ class Test<T, Args...> {
 public:
   T t;
   Test<Args...> rest;
+
+  void f(Args......);
+
   // sizeof... instead of sizeof(Args...) seems inconsistent
   static const int count = sizeof...(Args);
 };
