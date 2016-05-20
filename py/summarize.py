@@ -134,7 +134,8 @@ class Summarize(object):
 
   def _parse_args(self):
     parser = argparse.ArgumentParser(
-        description='Summarize log file')
+        description='Summarize a file by line. Clusters similar lines '\
+          'using a distance metric.')
 
     parser.add_argument('input', type=str, default='-',
       help='Input file, use "-" for stdin')
