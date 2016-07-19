@@ -142,7 +142,7 @@ class Summarize(object):
     parser.add_argument('-m', '--metric', default='hash',
       help='Metric to use, one of ' + ', '.join(
         [x.NAME for x in Distance.__subclasses__()]))
-    parser.add_argument('-d', '--distance', type=int, default=5,
+    parser.add_argument('-d', '--distance', type=float, default=5,
       help='Distance metric to use')
     parser.add_argument('-e', '--equiv', action='append', default=[],
       help='List of regular expressions to render "equivalent"')
