@@ -1,0 +1,53 @@
+settings:
+  terminal: png font "helvetica,12" size 800,300
+  title: default title
+  
+plots:
+- series:
+  - title: exp
+    data:
+    - {x: 1, y: 2}
+    - {x: 2, y: 4}
+    - {x: 3, y: 8}
+    - {x: 4, y: 16}
+  - title: fib
+    data:
+    - {x: 1, y: 1}
+    - {x: 2, y: 1}
+    - {x: 3, y: 2}
+    - {x: 4, y: 3}
+    - {x: 5, y: 5}
+    - {x: 6, y: 8}
+- settings:
+    title: another series
+  series:
+  - title: exp
+    data:
+    - {x: 1, y: 2}
+    - {x: 2, y: 4}
+    - {x: 3, y: 8}
+    - {x: 4, y: 16}
+  - title: fib
+    data:
+    - {x: 1, y: 1}
+    - {x: 2, y: 1}
+    - {x: 3, y: 2}
+    - {x: 4, y: 3}
+    - {x: 5, y: 5}
+    - {x: 6, y: 8}
+
+  # - series:
+  #     - sql: select x, y from plot1
+  #       label: abc
+  #     - sql: select y, x from plot1
+  #       label: def
+  #   settings:
+  #     title: plot1
+      
+  # - series:
+  #     - sql: select x, y from plot1
+  #       label: abc
+  #     - sql: select y, x from plot1
+  #       label: def
+  #   settings: {}
+      
