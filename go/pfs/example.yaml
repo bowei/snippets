@@ -1,5 +1,5 @@
 settings:
-  terminal: png font "helvetica,12" size 800,300
+  terminal: png size 800,300
   title: default title
   
 plots:
@@ -18,6 +18,12 @@ plots:
     - {x: 4, y: 3}
     - {x: 5, y: 5}
     - {x: 6, y: 8}
+  - title: somedata
+    sql: select * from x
+  - title: somedata
+    sql: select x, y+10 from x
+  - title: xxx
+    sql: select x, y+15 from x
 - settings:
     title: another series
   series:
@@ -35,19 +41,3 @@ plots:
     - {x: 4, y: 3}
     - {x: 5, y: 5}
     - {x: 6, y: 8}
-
-  # - series:
-  #     - sql: select x, y from plot1
-  #       label: abc
-  #     - sql: select y, x from plot1
-  #       label: def
-  #   settings:
-  #     title: plot1
-      
-  # - series:
-  #     - sql: select x, y from plot1
-  #       label: abc
-  #     - sql: select y, x from plot1
-  #       label: def
-  #   settings: {}
-      

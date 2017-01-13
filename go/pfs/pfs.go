@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os/exec"
 	"text/template"
 
@@ -15,18 +17,25 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-var opts struct {
+var opts = struct {
 	db        string
 	yaml      string
 	showPlots bool
+	port      int
+}{
+	port: 8080,
+}
+
+type Tuple struct {
+	X float64 `yaml:"x"`
+	Y float64 `yaml:"y"`
 }
 
 type Series struct {
-	Data []struct {
-		X float64 `yaml:"x"`
-		Y float64 `yaml:"y"`
-	}
 	Title string `yaml:"title"`
+
+	SQL  string  `yaml:"sql"`
+	Data []Tuple `yaml:"data"`
 }
 
 type YamlFile struct {
@@ -40,9 +49,10 @@ type YamlFile struct {
 
 func parseArgs() {
 	flag.BoolVar(&opts.showPlots, "showPlots", false, "show plot scripts")
-
 	flag.StringVar(&opts.db, "db", "", "sqlite3 database")
 	flag.StringVar(&opts.yaml, "yaml", "", "plot yaml")
+	flag.IntVar(&opts.port, "port", opts.port, "HTTP port")
+
 	flag.Parse()
 
 	if len(opts.db) == 0 && false {
@@ -116,14 +126,15 @@ e
 
 type plots struct {
 	Images []string
+	Type   string
 }
 
 func renderHTML(p *plots) string {
 	const html = `<html>
 <head><title>pfs</title></head>
-<body>
+<body>{{$type := .Type}}
 {{range $_, $data := .Images}}
-	<img src="data:image/png;base64,{{$data}}"/>
+	<img src="data:image/{{$type}};base64,{{$data}}"/>
 {{end}}
 </body>
 </html>`
@@ -149,14 +160,26 @@ func maybeQuoteSetting(key string, val string) string {
 	}
 }
 
-func main() {
-	parseArgs()
-	/*
-		db, err := sql.Open("sqlite3", opts.db)
+func makeSeries(db *sql.DB, series *Series) Series {
+	if len(series.SQL) != 0 {
+		rows, err := db.Query(series.SQL)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
-	*/
+		series.Data = []Tuple{}
+		for rows.Next() {
+			tuple := Tuple{}
+			if err := rows.Scan(&tuple.X, &tuple.Y); err != nil {
+				log.Fatal(err)
+			}
+			series.Data = append(series.Data, tuple)
+		}
+	}
+
+	return *series
+}
+
+func plotFile(db *sql.DB, filename string) string {
 	yamlBytes, err := ioutil.ReadFile(opts.yaml)
 	if err != nil {
 		panic(err)
@@ -167,11 +190,15 @@ func main() {
 		panic(err)
 	}
 
-	plots := &plots{}
+	plots := &plots{Type: "png"}
 	for _, plot := range desc.Plots {
+		series := []Series{}
+		for _, inSeries := range plot.Series {
+			series = append(series, makeSeries(db, &inSeries))
+		}
 		g := gnuplot{
 			Settings: map[string]string{},
-			Series:   plot.Series,
+			Series:   series,
 		}
 		for k, v := range desc.Settings {
 			g.Settings[k] = maybeQuoteSetting(k, v)
@@ -182,5 +209,25 @@ func main() {
 		plots.Images = append(plots.Images, g.plot())
 	}
 
-	fmt.Println(renderHTML(plots))
+	return renderHTML(plots)
+}
+
+func main() {
+	parseArgs()
+
+	var db *sql.DB
+	if len(opts.db) != 0 {
+		var err error
+		db, err = sql.Open("sqlite3", opts.db)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, "%s", plotFile(db, opts.yaml))
+	})
+	log.Printf("Starting HTTP server on :%v", opts.port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", opts.port), nil))
 }
